@@ -1,0 +1,51 @@
+# FastAPI 및 웹 서버
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+starlette==0.27.0
+
+# 설정 및 환경변수
+python-dotenv==1.1.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
+pydantic_core==2.33.2
+
+# AWS 서비스
+boto3==1.38.32
+botocore==1.38.32
+
+# LangChain 및 AI
+langchain==0.3.25
+langchain-aws==0.2.24
+langchain-community==0.3.24
+langchain-core==0.3.64
+langgraph==0.4.8
+langgraph-checkpoint==2.0.26
+langsmith==0.3.45
+
+# HTTP 클라이언트
+requests==2.32.3
+httpx==0.28.1
+aiohttp==3.12.11
+
+# 데이터베이스
+SQLAlchemy==2.0.41
+psycopg2-binary==2.9.10
+
+# 인증 및 보안
+python-jose==3.5.0
+PyJWT==2.10.1
+cryptography==45.0.4
+
+# 파일 처리
+python-multipart==0.0.6
+aiofiles==24.1.0
+
+# 데이터 처리
+numpy==1.26.4
+pandas==2.3.0
+
+# 기타 유틸리티
+typing_extensions==4.14.0
+click==8.2.1
+colorama==0.4.6
+PyYAML==6.0.2
