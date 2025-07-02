@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from typing import Optional, List
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from functools import lru_cache
 
 load_dotenv()
@@ -13,8 +14,10 @@ class Settings(BaseSettings):
     COGNITO_CLIENT_SECRET: Optional[str] = None
     AWS_REGION: str = "us-west-2"
     
-    class Config:
-        env_file = ".env"
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="allow"
+    )
 
 @lru_cache()
 def get_settings():
