@@ -9,7 +9,7 @@ from app.analyze.workflow.youtube_workflow import YouTubeReporterWorkflow
 from app.database.services.database_service import database_service
 from app.s3.services.user_s3_service import user_s3_service
 from app.s3.services.s3_service import s3_service
-from app.audio.services.audio_service import audio_service
+# from app.audio.services.audio_service import audio_service  # 임시 주석 처리
 from app.analyze.services.state_manager import state_manager
 from app.analyze.services.youtube_metadata_service import youtube_metadata_service
 import logging
@@ -169,12 +169,22 @@ class YouTubeReporterService:
                 }
             }
 
-            # S3에 업로드
-            s3_key = user_s3_service.upload_user_report(
+            # S3에 업로드 (메타데이터 포함)
+            s3_key = user_s3_service.upload_user_report_with_metadata(
                 user_id=user_id,
                 job_id=job_id,
                 content=json.dumps(report_data, ensure_ascii=False, indent=2),
-                file_type="json"
+                file_type="json",
+                metadata={
+                    "title": youtube_metadata.get("youtube_title", f"YouTube 분석 리포트 - {job_id[:8]}"),
+                    "youtube_url": youtube_url,
+                    "youtube_channel": youtube_metadata.get("youtube_channel", "Unknown Channel"),
+                    "youtube_duration": youtube_metadata.get("youtube_duration", "Unknown"),
+                    "youtube_thumbnail": youtube_metadata.get("youtube_thumbnail", ""),
+                    "video_id": youtube_metadata.get("video_id", ""),
+                    "analysis_type": "youtube_analysis",
+                    "status": "completed"
+                }
             )
 
 
@@ -196,7 +206,7 @@ class YouTubeReporterService:
 
 
     async def _generate_audio_summary(self, user_id: str, job_id: str, summary: str) -> Dict[str, Any]:
-        """요약 내용을 음성으로 변환"""
+        """요약 내용을 음성으로 변환 (임시 비활성화)"""
         try:
             logger.info(f"🎵 오디오 생성 시작: {job_id}")
 
@@ -204,19 +214,28 @@ class YouTubeReporterService:
             if len(summary) > 2500:
                 summary = summary[:2500] + "..."
 
-            # Polly로 음성 생성
-            audio_result = await audio_service.generate_audio(
-                text=summary,
-                job_id=job_id,
-                voice_id="Seoyeon"
-            )
+            # 임시로 오디오 생성 비활성화
+            logger.warning("오디오 생성 기능이 임시로 비활성화되었습니다.")
+            return {
+                "success": False, 
+                "error": "오디오 생성 기능이 임시로 비활성화되었습니다.",
+                "audio_s3_key": None,
+                "duration_estimate": 0
+            }
 
-            if audio_result.get("success"):
-                logger.info(f"✅ 오디오 생성 완료: {job_id}")
-                return audio_result
-            else:
-                logger.error(f"오디오 생성 실패: {audio_result}")
-                return {"success": False, "error": "음성 생성 실패"}
+            # Polly로 음성 생성 (임시 주석 처리)
+            # audio_result = await audio_service.generate_audio(
+            #     text=summary,
+            #     job_id=job_id,
+            #     voice_id="Seoyeon"
+            # )
+
+            # if audio_result.get("success"):
+            #     logger.info(f"✅ 오디오 생성 완료: {job_id}")
+            #     return audio_result
+            # else:
+            #     logger.error(f"오디오 생성 실패: {audio_result}")
+            #     return {"success": False, "error": "음성 생성 실패"}
 
         except Exception as e:
             logger.error(f"오디오 생성 중 오류: {str(e)}")

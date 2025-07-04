@@ -10,10 +10,8 @@ logging.basicConfig(
 
 from app.auth.routers.auth import router as auth_router
 from app.analyze.routers.youtube_analyze import router as analyze_router
-from app.audio.routers.audio_service import router as audio_router
 from app.s3.routers.s3 import router as s3_router
 from app.search.routers.youtube_search import router as search_router
-from app.chatbot.routers.chat_router import router as chatbot_router
 
 app = FastAPI(title="YouTube Analysis Backend API", version="1.0.0")
 
@@ -29,10 +27,10 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(auth_router)
 app.include_router(analyze_router)
-app.include_router(audio_router)
+# app.include_router(audio_router)  # 임시 주석 처리
 app.include_router(s3_router)
 app.include_router(search_router)
-app.include_router(chatbot_router)
+# app.include_router(chatbot_router)  # 임시 주석 처리
 
 @app.get("/")
 def root():

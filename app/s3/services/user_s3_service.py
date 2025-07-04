@@ -30,6 +30,35 @@ class UserS3Service:
         except Exception as e:
             raise Exception(f"보고서 업로드 실패: {str(e)}")
     
+    def upload_user_report_with_metadata(self, user_id: str, job_id: str, content: str, file_type: str = "json", metadata: dict = {}) -> str:
+        """
+        보고서 업로드 (메타데이터 포함)
+        """
+        try:
+            key = f"reports/{user_id}/{job_id}_report.{file_type}"
+            
+            # 기본 메타데이터
+            base_metadata = {
+                "user_id": user_id,
+                "job_id": job_id,
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            # 추가 메타데이터 병합
+            if metadata:
+                base_metadata.update(metadata)
+            
+            self.s3_client.put_object(
+                Bucket=self.bucket_name,
+                Key=key,
+                Body=content,
+                ContentType=f"application/{file_type}",
+                Metadata=base_metadata
+            )
+            return key
+        except Exception as e:
+            raise Exception(f"보고서 업로드 실패: {str(e)}")
+    
     def upload_user_audio(self, user_id: str, job_id: str, audio_data: bytes) -> str:
         """
         사용자별 오디오 파일 업로드
