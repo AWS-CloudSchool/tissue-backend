@@ -3,6 +3,7 @@ from typing import TypedDict, Dict, Any, List
 from langgraph.graph import StateGraph
 from app.analyze.agents.caption_extractor import CaptionAgent
 from app.analyze.agents.content_summarizer import SummaryAgent
+from app.analyze.agents.visualization_analyzer import VisualizationAnalyzer
 from app.analyze.agents.visualization_generator import SmartVisualAgent
 from app.analyze.agents.report_builder import ReportAgent
 from app.analyze.services.state_manager import state_manager
@@ -18,6 +19,7 @@ class GraphState(TypedDict):
     youtube_url: str
     caption: str
     summary: str
+    visualization_requests: List[Dict[str, Any]]
     visual_sections: List[Dict[str, Any]]
     report_result: Dict[str, Any]
     final_output: Dict[str, Any]
@@ -30,6 +32,7 @@ class YouTubeReporterWorkflow:
         logger.info("YouTube Reporter 워크플로우 초기화 중...")
         self.caption_agent = CaptionAgent()
         self.summary_agent = SummaryAgent()
+        self.visualization_analyzer = VisualizationAnalyzer()
         self.visual_agent = SmartVisualAgent()
         self.report_agent = ReportAgent()
         self.graph = self._build_graph()
@@ -42,6 +45,7 @@ class YouTubeReporterWorkflow:
         # 노드 추가
         builder.add_node("caption_node", self.caption_agent)
         builder.add_node("summary_node", self.summary_agent)
+        builder.add_node("visualization_analysis_node", self.visualization_analyzer)
         builder.add_node("visual_node", self.visual_agent)
         builder.add_node("report_node", self.report_agent)
         builder.add_node("finalize_node", self._finalize_result)
@@ -49,7 +53,8 @@ class YouTubeReporterWorkflow:
         # 엣지 연결 - 순차적 실행
         builder.set_entry_point("caption_node")
         builder.add_edge("caption_node", "summary_node")
-        builder.add_edge("summary_node", "visual_node")
+        builder.add_edge("summary_node", "visualization_analysis_node")
+        builder.add_edge("visualization_analysis_node", "visual_node")
         builder.add_edge("visual_node", "report_node")
         builder.add_edge("report_node", "finalize_node")
         builder.add_edge("finalize_node", "__end__")
@@ -105,6 +110,10 @@ class YouTubeReporterWorkflow:
                 section = final_output["sections"][i]
 
             if section.get("type") == "visualization":
+                logger.info(f"🔍 시각화 섹션 검증: {section.get('title', '제목 없음')}")
+                logger.info(f"   - 데이터: {section.get('data', '데이터 없음')}")
+                logger.info(f"   - 타입: {section.get('visualization_type', '타입 없음')}")
+                
                 if not section.get("data"):
                     logger.warning("시각화 섹션 '%s' 데이터 누락", section.get("title"))
                     section["error"] = "시각화 데이터가 없습니다"
@@ -117,12 +126,19 @@ class YouTubeReporterWorkflow:
                             logger.warning("Unexpected visualization_type format: %s", viz_info)
                         viz_type = viz_info
 
+                    logger.info(f"   - 시각화 타입: {viz_type}")
+                    
                     if viz_type == "chart" and not section["data"].get("config"):
                         section["error"] = "차트 설정이 없습니다"
+                        logger.warning("차트 설정 누락")
                     elif viz_type == "network" and not section["data"].get("data"):
                         section["error"] = "네트워크 데이터가 없습니다"
+                        logger.warning("네트워크 데이터 누락")
                     elif viz_type == "flow" and not section["data"].get("data"):
                         section["error"] = "플로우 데이터가 없습니다"
+                        logger.warning("플로우 데이터 누락")
+                    else:
+                        logger.info(f"✅ 시각화 섹션 '{section.get('title', '제목 없음')}' 검증 통과")
 
         logger.info("📊 최종 리포트 생성 완료:")
         logger.info(f"   - 제목: {final_output['title']}")
@@ -141,11 +157,12 @@ class YouTubeReporterWorkflow:
         logger.info(f"{'=' * 60}\n")
 
         initial_state = {
-            "job_id": job_id,
-            "user_id": user_id,
+            "job_id": job_id or "",
+            "user_id": user_id or "",
             "youtube_url": youtube_url,
             "caption": "",
             "summary": "",
+            "visualization_requests": [],
             "visual_sections": [],
             "report_result": {},
             "final_output": {}

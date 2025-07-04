@@ -101,6 +101,10 @@ async def get_analysis_status(
         # 진행률 정보 조회
         progress_info = youtube_reporter_service.get_job_progress(job_id)
 
+        # 상태가 변경되었을 때만 로그 출력 (디버그용)
+        if job.status in ['completed', 'failed']:
+            logger.info(f"작업 상태 조회: {job_id} - {job.status}")
+
         return {
             "job_id": job_id,
             "status": job.status,

@@ -47,7 +47,7 @@ AI 기반 YouTube 영상 분석 및 리포트 생성 백엔드 서비스
 - **Polly**: 텍스트 음성 변환
 
 ### Database
-- **PostgreSQL**: 메인 데이터베이스
+- **MySQL (AWS RDS)**: 메인 데이터베이스
 - **SQLAlchemy**: ORM
 - **Redis**: 캐시 및 세션 관리
 
@@ -85,6 +85,12 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # 의존성 설치
 pip install -r requirements.txt
 
+# 데이터베이스 테이블 생성
+python -m app.create_tables
+
+# 데이터베이스 연결 테스트 (선택사항)
+python test_db_connection.py
+
 # 애플리케이션 실행
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
@@ -92,6 +98,30 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ## 📋 환경변수 설정
 
 `.env` 파일에 다음 변수들을 설정하세요:
+
+### 데이터베이스 설정
+
+AWS RDS MySQL을 사용하는 경우 다음 설정이 필요합니다:
+
+1. **AWS RDS MySQL 인스턴스 생성** (자세한 내용은 `DATABASE_SETUP.md` 참조)
+2. **환경 변수 설정**:
+
+```env
+# AWS RDS MySQL 설정
+MYSQL_HOST=your-rds-endpoint.region.rds.amazonaws.com
+MYSQL_PORT=3306
+MYSQL_USER=your_username
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=tissue_db
+```
+
+또는 전체 DATABASE_URL을 사용할 수 있습니다:
+
+```env
+DATABASE_URL=mysql+pymysql://username:password@host:port/tissue_db?charset=utf8mb4
+```
+
+### 기타 설정
 
 ```env
 # AWS 설정
@@ -108,8 +138,15 @@ BEDROCK_KB_ID=your_knowledge_base_id
 COGNITO_USER_POOL_ID=your_user_pool_id
 COGNITO_CLIENT_ID=your_client_id
 
-# 데이터베이스
-DATABASE_URL=postgresql://user:password@localhost/dbname
+# 데이터베이스 (AWS RDS MySQL)
+MYSQL_HOST=your-rds-endpoint.region.rds.amazonaws.com
+MYSQL_PORT=3306
+MYSQL_USER=your_username
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=tissue_db
+
+# 또는 전체 DATABASE_URL 사용
+# DATABASE_URL=mysql+pymysql://username:password@host:port/tissue_db?charset=utf8mb4
 
 # API 키
 VIDCAP_API_KEY=your_vidcap_api_key

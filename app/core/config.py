@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 from typing import Optional, List
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
 from functools import lru_cache
 
 load_dotenv()
@@ -52,11 +51,19 @@ class Settings(BaseSettings):
     
     # 데이터베이스 설정
     DATABASE_URL: Optional[str] = None
+    
+    # MySQL 설정 (AWS RDS용)
+    MYSQL_HOST: Optional[str] = None
+    MYSQL_PORT: int = 3306
+    MYSQL_USER: Optional[str] = None
+    MYSQL_PASSWORD: Optional[str] = None
+    MYSQL_DATABASE: Optional[str] = None
 
-    model_config = ConfigDict(
-        env_file=".env",
-        extra="allow"
-    )
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "allow"
+        case_sensitive = False
 
 @lru_cache()
 def get_settings() -> Settings:

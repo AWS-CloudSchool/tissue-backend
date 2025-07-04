@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+# 로그 레벨 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 from app.auth.routers.auth import router as auth_router
 from app.analyze.routers.youtube_analyze import router as analyze_router
