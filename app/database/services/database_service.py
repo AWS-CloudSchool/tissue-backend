@@ -22,7 +22,15 @@ class DatabaseService:
     
     def update_job_status(self, db: Session, job_id: str, status: str, result_s3_key: str = None):
         """작업 상태 업데이트"""
-        job = db.query(UserAnalysisJob).filter(UserAnalysisJob.id == job_id).first()
+        # job_id가 str이면 UUID로 변환
+        if isinstance(job_id, str):
+            try:
+                job_id_uuid = uuid.UUID(job_id)
+            except Exception:
+                job_id_uuid = job_id
+        else:
+            job_id_uuid = job_id
+        job = db.query(UserAnalysisJob).filter(UserAnalysisJob.id == job_id_uuid).first()
         if job:
             job.status = status
             if result_s3_key:
@@ -39,13 +47,26 @@ class DatabaseService:
     
     def get_job_by_id(self, db: Session, job_id: str, user_id: str) -> Optional[UserAnalysisJob]:
         """작업 ID로 조회 (사용자 권한 확인)"""
+        # job_id가 str이면 UUID로 변환
+        if isinstance(job_id, str):
+            try:
+                job_id_uuid = uuid.UUID(job_id)
+            except Exception:
+                job_id_uuid = job_id
+        else:
+            job_id_uuid = job_id
         return db.query(UserAnalysisJob).filter(
-            UserAnalysisJob.id == job_id,
+            UserAnalysisJob.id == job_id_uuid,
             UserAnalysisJob.user_id == user_id
         ).first()
     
     def create_user_report(self, db: Session, job_id: str, user_id: str, title: str, s3_key: str, file_type: str) -> UserReport:
         """사용자 보고서 생성"""
+        # job_id, user_id가 str이면 UUID로 변환
+        if isinstance(job_id, str):
+            job_id = uuid.UUID(job_id)
+        if isinstance(user_id, str):
+            user_id = uuid.UUID(user_id)
         report = UserReport(
             job_id=job_id,
             user_id=user_id,
@@ -60,6 +81,11 @@ class DatabaseService:
     
     def create_user_audio(self, db: Session, job_id: str, user_id: str, s3_key: str, duration: int) -> UserAudioFile:
         """사용자 오디오 파일 생성"""
+        # job_id, user_id가 str이면 UUID로 변환
+        if isinstance(job_id, str):
+            job_id = uuid.UUID(job_id)
+        if isinstance(user_id, str):
+            user_id = uuid.UUID(user_id)
         audio = UserAudioFile(
             job_id=job_id,
             user_id=user_id,
@@ -85,15 +111,23 @@ class DatabaseService:
     
     def delete_job(self, db: Session, job_id: str, user_id: str) -> bool:
         """작업 삭제 (사용자 권한 확인)"""
+        # job_id가 str이면 UUID로 변환
+        if isinstance(job_id, str):
+            try:
+                job_id_uuid = uuid.UUID(job_id)
+            except Exception:
+                job_id_uuid = job_id
+        else:
+            job_id_uuid = job_id
         job = db.query(UserAnalysisJob).filter(
-            UserAnalysisJob.id == job_id,
+            UserAnalysisJob.id == job_id_uuid,
             UserAnalysisJob.user_id == user_id
         ).first()
         
         if job:
             # 관련 보고서와 오디오 파일도 삭제
-            db.query(UserReport).filter(UserReport.job_id == job_id).delete()
-            db.query(UserAudioFile).filter(UserAudioFile.job_id == job_id).delete()
+            db.query(UserReport).filter(UserReport.job_id == job_id_uuid).delete()
+            db.query(UserAudioFile).filter(UserAudioFile.job_id == job_id_uuid).delete()
             db.delete(job)
             db.commit()
             return True
