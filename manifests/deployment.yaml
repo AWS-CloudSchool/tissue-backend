@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tissue-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tissue-backend
+  template:
+    metadata:
+      labels:
+        app: tissue-backend
+    spec:
+      containers:
+        - name: tissue-backend
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/testcd:build-30
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
