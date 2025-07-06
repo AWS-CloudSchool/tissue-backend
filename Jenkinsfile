@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        // Jenkins Credentials에서  가져올 환경 변수들!!
+        // Jenkins Credentials에서  가져올 환경 변수들
         AWS_REGION = "${env.AWS_REGION ?: 'us-west-2'}"
         AWS_ACCOUNT_ID = credentials('aws-account-id')
         ECR_REPOSITORY = credentials('ecr-repository-name')
