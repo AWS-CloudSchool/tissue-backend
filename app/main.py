@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.database.core.database import Base, engine
 from app.auth.routers.auth import router as auth_router
 from app.analyze.routers.youtube_analyze import router as analyze_router
 from app.audio.routers.audio_service import router as audio_router
@@ -9,6 +10,9 @@ from app.search.routers.youtube_search import router as search_router
 from app.chatbot.routers.chat_router import router as chatbot_router
 
 app = FastAPI(title="YouTube Analysis Backend API", version="1.0.0")
+
+# 데이터베이스 테이블 자동 생성
+Base.metadata.create_all(bind=engine)
 
 # CORS 설정 (필요에 따라 origins 수정)
 app.add_middleware(

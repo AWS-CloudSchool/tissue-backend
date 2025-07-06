@@ -47,7 +47,7 @@ AI 기반 YouTube 영상 분석 및 리포트 생성 백엔드 서비스
 - **Polly**: 텍스트 음성 변환
 
 ### Database
-- **PostgreSQL**: 메인 데이터베이스
+- **MySQL**: 메인 데이터베이스
 - **SQLAlchemy**: ORM
 - **Redis**: 캐시 및 세션 관리
 
@@ -109,7 +109,7 @@ COGNITO_USER_POOL_ID=your_user_pool_id
 COGNITO_CLIENT_ID=your_client_id
 
 # 데이터베이스
-DATABASE_URL=postgresql://user:password@localhost/dbname
+DATABASE_URL=mysql+pymysql://user:password@localhost/dbname
 
 # API 키
 VIDCAP_API_KEY=your_vidcap_api_key
