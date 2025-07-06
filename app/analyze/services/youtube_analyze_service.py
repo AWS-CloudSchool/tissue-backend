@@ -1,9 +1,11 @@
 # app/services/youtube_reporter_service.py
 import uuid
 import json
+import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
+from concurrent.futures import ThreadPoolExecutor
 
 from app.analyze.workflow.youtube_workflow import YouTubeReporterWorkflow
 from app.database.services.database_service import database_service
@@ -50,12 +52,16 @@ class YouTubeReporterService:
         try:
             logger.info(f"🎬 YouTube 분석 시작: {job_id}")
 
-            # LangGraph 워크플로우 실행
-            result = self.workflow.process(
-                youtube_url=youtube_url,
-                job_id=job_id,
-                user_id=user_id
-            )
+            # LangGraph 워크플로우를 별도 스레드에서 실행 (블로킹 방지)
+            loop = asyncio.get_event_loop()
+            with ThreadPoolExecutor() as executor:
+                result = await loop.run_in_executor(
+                    executor,
+                    self.workflow.process,
+                    youtube_url,
+                    job_id,
+                    user_id
+                )
 
             # 결과를 S3에 저장
             s3_info = await self._save_report_to_s3(
