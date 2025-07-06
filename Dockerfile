@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY app/ ./app/
 #COPY .env .env
-
+# 위 env가 숨김파일이기 때문에, CI할 때 env파일을 찾을수가 없다고 나와서 CI실패됨. 그래서 주석처리함. 오류나면 안될텐데..일단 함
 
 # 포트 노출
 EXPOSE 8000
