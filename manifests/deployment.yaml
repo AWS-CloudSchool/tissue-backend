@@ -14,7 +14,11 @@ spec:
     spec:
       containers:
         - name: tissue-backend
+<<<<<<< HEAD
           image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/testcd:build-31
+=======
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/testcd:build-47
+>>>>>>> 86366156c65f9f0f3cc6399e5fcc94f2747a7707
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
