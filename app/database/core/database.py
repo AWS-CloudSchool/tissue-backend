@@ -5,7 +5,7 @@ from app.core.config import settings
 
 # MySQL 연결을 위한 추가 설정
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.database_url,
     pool_pre_ping=True,
     pool_recycle=300,
     echo=False
