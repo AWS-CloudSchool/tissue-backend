@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 코드 복사
 COPY app/ ./app/
-COPY .env .env
+#COPY .env .env
 
 
 # 포트 노출
