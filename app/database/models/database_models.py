@@ -25,7 +25,7 @@ class UserReport(Base):
     __tablename__ = "user_reports"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    job_id = Column(String(36), ForeignKey("user_analysis_jobs.id", ondelete="CASCADE"))
+    job_id = Column(String(36), ForeignKey("user_analysis_jobs.id"))
     user_id = Column(String(255), nullable=False, index=True)
     title = Column(String(500))
     s3_key = Column(String(500))
@@ -39,7 +39,7 @@ class UserAudioFile(Base):
     __tablename__ = "user_audio_files"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    job_id = Column(String(36), ForeignKey("user_analysis_jobs.id", ondelete="CASCADE"))
+    job_id = Column(String(36), ForeignKey("user_analysis_jobs.id"))
     user_id = Column(String(255), nullable=False, index=True)
     s3_key = Column(String(500))
     duration = Column(Integer)  # 재생 시간(초)

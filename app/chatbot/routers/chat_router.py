@@ -101,6 +101,10 @@ async def sync_kb_endpoint(request: SyncKBRequest):
     try:
         print(f"📥 KB 동기화 요청: user_id={request.user_id}, job_id={request.job_id}")
         sync_job_id = process_user_job(request.user_id, request.job_id)
+        
+        # UUID job_id와 실제 sync_job_id 매핑 저장
+        kb_sync_jobs[request.job_id] = sync_job_id
+        
         return {
             "success": True,
             "message": "KB 동기화가 시작되었습니다.",
@@ -120,11 +124,25 @@ async def sync_kb_endpoint(request: SyncKBRequest):
             "error": str(e)
         }
 
+# KB sync job ID를 저장하는 딕셔너리 (실제로는 Redis나 DB 사용 권장)
+kb_sync_jobs = {}
+
 @router.get("/api/kb-status/{job_id}")
 async def get_kb_status(job_id: str):
     try:
+        # job_id가 UUID 형식이면 저장된 sync_job_id 사용
+        if len(job_id) > 10 and '-' in job_id:
+            sync_job_id = kb_sync_jobs.get(job_id)
+            if not sync_job_id:
+                return {
+                    "status": "ERROR",
+                    "error": "KB sync job not found"
+                }
+        else:
+            sync_job_id = job_id
+            
         from app.chatbot.tool.wait_until_kb_sync_complete import get_ingestion_job_status
-        status = get_ingestion_job_status(job_id)
+        status = get_ingestion_job_status(sync_job_id)
         
         # Bedrock 상태를 프론트엔드 상태로 매핑
         if status == "COMPLETE":
@@ -138,7 +156,8 @@ async def get_kb_status(job_id: str):
             
         return {
             "status": frontend_status,
-            "bedrock_status": status
+            "bedrock_status": status,
+            "sync_job_id": sync_job_id
         }
     except Exception as e:
         print(f"❌ KB 상태 조회 실패: {str(e)}")

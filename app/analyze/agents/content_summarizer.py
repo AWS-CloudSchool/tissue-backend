@@ -17,7 +17,7 @@ class SummaryAgent(Runnable):
     def __init__(self):
         self.llm = ChatBedrock(
             client=boto3.client("bedrock-runtime", region_name=settings.AWS_REGION),
-            model_id=settings.BEDROCK_MODEL_ID,
+            model=settings.BEDROCK_MODEL_ID,
             model_kwargs={"temperature": settings.BEDROCK_TEMPERATURE, "max_tokens": settings.BEDROCK_MAX_TOKENS}
         )
 

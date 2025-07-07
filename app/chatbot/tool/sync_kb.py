@@ -15,6 +15,22 @@ def sync_kb():
     try:
         bedrock_client = boto3.client("bedrock-agent", region_name=settings.AWS_REGION)
         
+        # 진행 중인 job 확인
+        try:
+            jobs = bedrock_client.list_ingestion_jobs(
+                knowledgeBaseId=settings.BEDROCK_KB_ID,
+                dataSourceId=settings.BEDROCK_DS_ID
+            )
+            
+            for job in jobs.get("ingestionJobSummaries", []):
+                if job.get("status") in ["STARTING", "IN_PROGRESS"]:
+                    job_id = job["ingestionJobId"]
+                    print(f"⚠️ 진행 중인 Job 재사용: {job_id}")
+                    return job_id
+        except Exception as e:
+            print(f"⚠️ 기존 Job 확인 중 오류: {e}")
+        
+        # 새 job 시작
         response = bedrock_client.start_ingestion_job(
             knowledgeBaseId=settings.BEDROCK_KB_ID,
             dataSourceId=settings.BEDROCK_DS_ID
@@ -24,6 +40,22 @@ def sync_kb():
         print(f"📋 KB 동기화 Job 시작: {job_id}")
         return job_id
         
+    except ClientError as e:
+        if "ConflictException" in str(e):
+            print(f"⚠️ 진행 중인 Job이 있음: {e}")
+            # 기존 job 찾아서 반환
+            try:
+                jobs = bedrock_client.list_ingestion_jobs(
+                    knowledgeBaseId=settings.BEDROCK_KB_ID,
+                    dataSourceId=settings.BEDROCK_DS_ID
+                )
+                for job in jobs.get("ingestionJobSummaries", []):
+                    if job.get("status") in ["STARTING", "IN_PROGRESS"]:
+                        return job["ingestionJobId"]
+            except:
+                pass
+        print(f"❌ KB 동기화 Job 시작 실패: {e}")
+        return None
     except Exception as e:
         print(f"❌ KB 동기화 Job 시작 실패: {e}")
         return None

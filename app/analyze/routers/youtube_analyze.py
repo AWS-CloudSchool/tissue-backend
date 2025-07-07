@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/analyze", tags=["YouTube Reporter"])
 
 
-async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: Session):
-    """백그라운드에서 YouTube 분석 실행"""
+async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str):
+    """백그라운드에서 YouTube 분석 실행 (독립적인 DB 세션 사용)"""
+    from app.database.core.database import SessionLocal
+    
+    db = SessionLocal()
     try:
         await youtube_reporter_service.process_youtube_analysis(
             job_id=job_id,
@@ -26,6 +29,8 @@ async def run_youtube_analysis(job_id: str, user_id: str, youtube_url: str, db: 
         )
     except Exception as e:
         logger.error(f"백그라운드 YouTube 분석 실패: {job_id} - {str(e)}")
+    finally:
+        db.close()
 
 
 @router.post("/youtube", response_model=YouTubeReporterResponse)
@@ -39,8 +44,6 @@ async def create_youtube_analysis(
     YouTube 영상 분석 및 스마트 시각화 리포트 생성
 
     - **youtube_url**: 분석할 YouTube 영상 URL
-    - **include_audio**: 음성 요약 생성 여부 (선택사항)
-    - **options**: 추가 옵션 (선택사항)
     """
     try:
         user_id = current_user["user_id"]
@@ -55,13 +58,12 @@ async def create_youtube_analysis(
             db=db
         )
 
-        # 2. 백그라운드에서 분석 실행
+        # 2. 백그라운드에서 분석 실행 (독립적인 세션)
         background_tasks.add_task(
             run_youtube_analysis,
             job_id=job_id,
             user_id=user_id,
-            youtube_url=youtube_url,
-            db=db
+            youtube_url=youtube_url
         )
 
         return YouTubeReporterResponse(
@@ -252,6 +254,47 @@ async def list_my_analyses(
         raise HTTPException(
             status_code=500,
             detail=f"작업 목록 조회 실패: {str(e)}"
+        )
+
+
+@router.post("/jobs/{job_id}/cancel")
+async def cancel_analysis_job(
+        job_id: str,
+        current_user: dict = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    """
+    YouTube Reporter 분석 작업 취소
+
+    - **job_id**: 취소할 작업 ID
+    """
+    try:
+        user_id = current_user["user_id"]
+
+        # 작업 존재 확인
+        job = database_service.get_job_by_id(db, job_id, user_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다")
+        
+        if job.status != "processing":
+            raise HTTPException(status_code=400, detail="진행 중인 작업만 취소할 수 있습니다")
+
+        # 취소 요청
+        from app.analyze.services.state_manager import state_manager
+        state_manager.cancel_job(job_id)
+        
+        # DB 상태 업데이트
+        database_service.update_job_status(db, job_id, "cancelled")
+
+        return {"message": f"작업 {job_id} 취소 요청이 전송되었습니다"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"작업 취소 실패: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"작업 취소 실패: {str(e)}"
         )
 
 
