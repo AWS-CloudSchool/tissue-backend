@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tissue-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tissue-backend
+  template:
+    metadata:
+      labels:
+        app: tissue-backend
+    spec:
+      containers:
+        - name: tissue-backend
+          image: 922805825674.dkr.ecr.us-west-2.amazonaws.com/testcd:build-57
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
