@@ -51,7 +51,19 @@ class Settings(BaseSettings):
     COGNITO_CLIENT_SECRET: Optional[str] = None
     
     # 데이터베이스 설정
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 3306
+    DB_USER: str = "user"
+    DB_PASSWORD: str = "password"
+    DB_NAME: str = "backend_final"
     DATABASE_URL: Optional[str] = None
+    
+    @property
+    def database_url(self) -> str:
+        """환경변수에서 DATABASE_URL을 동적으로 생성"""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     model_config = ConfigDict(
         env_file=".env",
