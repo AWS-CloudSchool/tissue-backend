@@ -9,6 +9,7 @@ from app.audio.routers.audio_service import router as audio_router
 from app.s3.routers.s3 import router as s3_router
 from app.search.routers.youtube_search import router as search_router
 from app.chatbot.routers.chat_router import router as chatbot_router
+from app.monitoring.routers.metrics import router as monitoring_router
 
 # 모니터링 import
 from app.middleware import MetricsMiddleware
