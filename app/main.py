@@ -29,7 +29,7 @@ app.add_middleware(MetricsMiddleware)
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.tissue.cloud", "https://dltec80179zlu.cloudfront.net",
+    allow_origins=["https://www.tissue.cloud", "https://dltec80179zlu.cloudfront.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
