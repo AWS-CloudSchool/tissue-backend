@@ -16,7 +16,7 @@ def track_youtube_job(stage_name: str):
                 
                 # 메트릭 업데이트
                 try:
-                    from app.metrics import youtube_job_total, youtube_job_duration
+                    from app.monitoring.services.metrics import youtube_job_total, youtube_job_duration
                     youtube_job_total.labels(status='completed').inc()
                     youtube_job_duration.labels(stage=stage_name).observe(time.time() - start_time)
                 except ImportError:
@@ -28,7 +28,7 @@ def track_youtube_job(stage_name: str):
             except Exception as e:
                 # 실패 메트릭 업데이트
                 try:
-                    from app.metrics import youtube_job_total
+                    from app.monitoring.services.metrics import youtube_job_total
                     youtube_job_total.labels(status='failed').inc()
                 except:
                     pass
@@ -49,7 +49,7 @@ def track_llm_call(agent_name: str):
                 
                 # 성공 메트릭 업데이트
                 try:
-                    from app.metrics import llm_call_total, llm_call_duration
+                    from app.monitoring.services.metrics import llm_call_total, llm_call_duration
                     llm_call_total.labels(agent=agent_name, status='success').inc()
                     llm_call_duration.labels(agent=agent_name).observe(time.time() - start_time)
                 except ImportError:
@@ -61,7 +61,7 @@ def track_llm_call(agent_name: str):
             except Exception as e:
                 # 실패 메트릭 업데이트
                 try:
-                    from app.metrics import llm_call_total
+                    from app.monitoring.services.metrics import llm_call_total
                     llm_call_total.labels(agent=agent_name, status='error').inc()
                 except:
                     pass
@@ -82,7 +82,7 @@ def track_api_performance(endpoint_name: str):
                 
                 # 성공 메트릭 업데이트
                 try:
-                    from app.metrics import api_request_duration, api_request_count
+                    from app.monitoring.services.metrics import api_request_duration, api_request_count
                     duration = time.time() - start_time
                     api_request_duration.labels(
                         method="POST", 
@@ -101,7 +101,7 @@ def track_api_performance(endpoint_name: str):
             except Exception as e:
                 # 실패 메트릭 업데이트
                 try:
-                    from app.metrics import api_request_count
+                    from app.monitoring.services.metrics import api_request_count
                     api_request_count.labels(
                         method="POST",
                         endpoint=endpoint_name,
@@ -121,7 +121,7 @@ def track_api_performance(endpoint_name: str):
                 
                 # 성공 메트릭 업데이트
                 try:
-                    from app.metrics import api_request_duration, api_request_count
+                    from app.monitoring.services.metrics import api_request_duration, api_request_count
                     duration = time.time() - start_time
                     api_request_duration.labels(
                         method="GET", 
@@ -140,7 +140,7 @@ def track_api_performance(endpoint_name: str):
             except Exception as e:
                 # 실패 메트릭 업데이트
                 try:
-                    from app.metrics import api_request_count
+                    from app.monitoring.services.metrics import api_request_count
                     api_request_count.labels(
                         method="GET",
                         endpoint=endpoint_name,

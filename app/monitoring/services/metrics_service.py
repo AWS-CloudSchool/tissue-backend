@@ -24,7 +24,7 @@ class MetricsService:
     def update_system_metrics(self):
         """시스템 메트릭 업데이트"""
         try:
-            from app.metrics import cpu_usage, memory_usage
+            from app.monitoring.services.metrics import cpu_usage, memory_usage
             cpu_usage.set(psutil.cpu_percent())
             memory_usage.set(psutil.virtual_memory().percent)
         except Exception as e:
