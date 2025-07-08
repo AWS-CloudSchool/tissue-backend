@@ -19,6 +19,76 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: "tissu-test-database.c7oqui4icou3.us-west-2.rds.amazonaws.com"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: "admin"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: db-password
+            - name: DB_NAME
+              value: "tissue"
+            - name: COGNITO_USER_POOL_ID
+              value: "us-west-2_vsGsSoTJe"
+            - name: COGNITO_CLIENT_ID
+              value: "6rqobnfsf0lnfen24me10j7d2v"
+            - name: COGNITO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: cognito-client-secret
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: aws-secret-access-key
+            - name: AWS_REGION
+              value: "us-west-2"
+            - name: AWS_S3_BUCKET
+              value: "s3-aws8"
+            - name: YOUTUBE_LAMBDA_NAME
+              value: "aws8"
+            - name: BEDROCK_KB_ID
+              value: "8LPGWWQYCM"
+            - name: BEDROCK_DS_ID
+              value: "E33HDTF9XZ"
+            - name: BEDROCK_MODEL_ID
+              value: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+            - name: DYNAMODB_TABLE_NAME
+              value: "LangGraphStates"
+            - name: POLLY_VOICE_ID
+              value: "Seoyeon"
+            - name: VIDCAP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: vidcap-api-key
+            - name: LANGCHAIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: langchain-api-key
+            - name: LANGCHAIN_ENDPOINT
+              value: "https://api.smith.langchain.com"
+            - name: LANGCHAIN_PROJECT
+              value: "Youtube-summarizer"
+            - name: LANGCHAIN_TRACING_V2
+              value: "true"
+            - name: YOUTUBE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tissue-backend-secrets
+                  key: youtube-api-key
           resources:
             requests:
               cpu: 100m
