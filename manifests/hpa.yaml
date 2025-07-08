@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: tissue-backend-hpa
-  namespace: tissue-backend1
+  namespace: tissue-backend
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
