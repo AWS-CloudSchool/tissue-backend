@@ -19,15 +19,35 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         
         try:
             # 메트릭 업데이트
-            from app.monitoring.services.metrics_service import metrics_service
-            
-            # API 요청 메트릭 기록
             method = request.method
             path = request.url.path
-            status_code = response.status_code
+            status_code = str(response.status_code)
             
             # 경로 정규화 (파라미터 제거)
             normalized_path = self._normalize_path(path)
+            
+            # API 요청 메트릭 기록
+            try:
+                from app.monitoring.services.metrics import api_request_count, api_request_duration
+                
+                api_request_count.labels(
+                    method=method,
+                    endpoint=normalized_path,
+                    status_code=status_code
+                ).inc()
+                
+                api_request_duration.labels(
+                    method=method,
+                    endpoint=normalized_path,
+                    status_code=status_code
+                ).observe(process_time)
+                
+                logger.info(f"✅ API 메트릭 업데이트: {method} {normalized_path} {status_code} ({process_time:.3f}s)")
+                
+            except ImportError as e:
+                logger.error(f"❌ 메트릭 모듈 import 실패: {e}")
+            except Exception as e:
+                logger.error(f"❌ 메트릭 업데이트 실패: {e}")
             
             logger.info(f"{method} {normalized_path} - {status_code} ({process_time:.3f}s)")
             
@@ -48,5 +68,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         
         # 일반적인 ID 패턴을 {id}로 변환
         path = re.sub(r'/\d+', '/{id}', path)
+        
+        # S3 키 패턴 정규화
+        path = re.sub(r'/[a-zA-Z0-9_-]+\.(json|txt|mp3|pdf)', '/{file}', path)
         
         return path

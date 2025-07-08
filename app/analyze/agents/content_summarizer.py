@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from app.core.config import settings
 from app.analyze.services.state_manager import state_manager
+from app.decorators import track_llm_call
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class SummaryAgent(Runnable):
             ("human", "다음 YouTube 영상 자막을 분석하여 포괄적인 요약을 작성해주세요:\n\n{caption}")
         ])
 
+    @track_llm_call("summary_agent")
     def invoke(self, state: dict, config=None):
         caption = state.get("caption", "")
         job_id = state.get("job_id")

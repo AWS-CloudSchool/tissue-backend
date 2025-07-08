@@ -50,41 +50,40 @@ class CaptionAgent(Runnable):
                     s3_key = f"captions/{user_id}/{job_id}_caption.txt"
                     user_s3_service.upload_text_content(s3_key, caption)
                     logger.info(f"📄 자막 S3 저장 완료: {s3_key}")
+                    
+                    # S3 업로드 성공 메트릭 수동 업데이트
+                    try:
+                        from app.monitoring.services.metrics import s3_uploads_total
+                        s3_uploads_total.labels(status='success').inc()
+                        logger.info("✅ S3 업로드 성공 메트릭 업데이트")
+                    except Exception as metric_error:
+                        logger.error(f"❌ S3 메트릭 업데이트 실패: {metric_error}")
+                        
                 except Exception as e:
                     logger.warning(f"자막 S3 저장 실패 (무시됨): {e}")
+                    
+                    # S3 업로드 실패 메트릭 수동 업데이트
+                    try:
+                        from app.monitoring.services.metrics import s3_uploads_total
+                        s3_uploads_total.labels(status='failed').inc()
+                        logger.info("🔴 S3 업로드 실패 메트릭 업데이트")
+                    except Exception as metric_error:
+                        logger.error(f"❌ S3 실패 메트릭 업데이트 실패: {metric_error}")
 
             logger.info(f"✅ 자막 추출 완료: {len(caption)}자")
             
-            # 메트릭 로깅
-            try:
-                from app.metrics import youtube_job_total
-                youtube_job_total.labels(status='caption_success').inc()
-            except:
-                pass
-                
+            # 데코레이터가 성공 메트릭을 처리하므로 여기서는 제거
             return {**state, "caption": caption}
 
         except requests.RequestException as e:
             error_msg = f"자막 API 호출 실패: {str(e)}"
             logger.error(error_msg)
             
-            # 메트릭 로깅
-            try:
-                from app.metrics import youtube_job_total
-                youtube_job_total.labels(status='caption_failed').inc()
-            except:
-                pass
-                
+            # 데코레이터가 실패 메트릭을 처리하므로 여기서는 제거
             return {**state, "caption": error_msg}
         except Exception as e:
             error_msg = f"자막 추출 실패: {str(e)}"
             logger.error(error_msg)
             
-            # 메트릭 로깅
-            try:
-                from app.metrics import youtube_job_total
-                youtube_job_total.labels(status='caption_failed').inc()
-            except:
-                pass
-                
+            # 데코레이터가 실패 메트릭을 처리하므로 여기서는 제거
             return {**state, "caption": error_msg}
