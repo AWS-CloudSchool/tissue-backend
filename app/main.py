@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import logging
 
 from app.core.config import settings
@@ -11,7 +10,7 @@ from app.s3.routers.s3 import router as s3_router
 from app.search.routers.youtube_search import router as search_router
 from app.chatbot.routers.chat_router import router as chatbot_router
 
-# 모니터링 import (경로 수정!)
+# 모니터링 import
 from app.middleware import MetricsMiddleware
 
 # 로깅 설정
@@ -45,18 +44,14 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
 
-# 메트릭 엔드포인트 추가
-@app.get("/metrics")
-def get_metrics():
-    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
-# 라우터 등록 (기존 그대로)
+# 라우터 등록 
 app.include_router(auth_router)
 app.include_router(analyze_router)
 app.include_router(audio_router)
 app.include_router(s3_router)
 app.include_router(search_router)
 app.include_router(chatbot_router)
+app.include_router(monitoring_router) 
 
 @app.get("/")
 def root():
