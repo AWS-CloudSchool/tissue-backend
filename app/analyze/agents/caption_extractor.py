@@ -4,6 +4,7 @@ from langchain_core.runnables import Runnable
 from app.core.config import settings
 from app.analyze.services.state_manager import state_manager
 from app.s3.services.user_s3_service import user_s3_service
+from app.decorators import track_youtube_job, track_api_performance
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,8 @@ class CaptionAgent(Runnable):
         self.api_key = settings.VIDCAP_API_KEY
         self.api_url = "https://vidcap.xyz/api/v1/youtube/caption"
 
+    @track_youtube_job("caption_extraction")
+    @track_api_performance("/analyze/caption")
     def invoke(self, state: dict, config=None):
         youtube_url = state.get("youtube_url")
         job_id = state.get("job_id")
@@ -32,7 +35,8 @@ class CaptionAgent(Runnable):
             response = requests.get(
                 self.api_url,
                 params={"url": youtube_url, "locale": "ko"},
-                headers={"Authorization": f"Bearer {self.api_key}"}
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=30  # 타임아웃 추가
             )
             response.raise_for_status()
 
@@ -50,9 +54,37 @@ class CaptionAgent(Runnable):
                     logger.warning(f"자막 S3 저장 실패 (무시됨): {e}")
 
             logger.info(f"✅ 자막 추출 완료: {len(caption)}자")
+            
+            # 메트릭 로깅
+            try:
+                from app.metrics import youtube_job_total
+                youtube_job_total.labels(status='caption_success').inc()
+            except:
+                pass
+                
             return {**state, "caption": caption}
 
+        except requests.RequestException as e:
+            error_msg = f"자막 API 호출 실패: {str(e)}"
+            logger.error(error_msg)
+            
+            # 메트릭 로깅
+            try:
+                from app.metrics import youtube_job_total
+                youtube_job_total.labels(status='caption_failed').inc()
+            except:
+                pass
+                
+            return {**state, "caption": error_msg}
         except Exception as e:
             error_msg = f"자막 추출 실패: {str(e)}"
             logger.error(error_msg)
+            
+            # 메트릭 로깅
+            try:
+                from app.metrics import youtube_job_total
+                youtube_job_total.labels(status='caption_failed').inc()
+            except:
+                pass
+                
             return {**state, "caption": error_msg}
