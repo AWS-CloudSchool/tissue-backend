@@ -1,35 +1,4 @@
-// Application 환경 변수들
-        // Database 설정
-        DB_HOST = "tissu-test-database.c7oqui4icou3.us-west-2.rds.amazonaws.com"
-        DB_PORT = "3306"
-        DB_USER = "admin"
-        DB_PASSWORD = credentials('db-password')
-        DB_NAME = "tissue"
-        
-        COGNITO_USER_POOL_ID = "us-west-2_vsGsSoTJe"
-        COGNITO_CLIENT_ID = "6rqobnfsf0lnfen24me10j7d2v"
-        COGNITO_CLIENT_SECRET = credentials('cognito-client-secret')
-        
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        AWS_S3_BUCKET = "s3-aws8"
-        
-        YOUTUBE_LAMBDA_NAME = "aws8"
-        BEDROCK_KB_ID = "8LPGWWQYCM"
-        BEDROCK_DS_ID = "E33HDTF9XZ"
-        BEDROCK_MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-        
-        DYNAMODB_TABLE_NAME = "LangGraphStates"
-        POLLY_VOICE_ID = "Seoyeon"
-        
-        VIDCAP_API_KEY = credentials('vidcap-api-key')
-        
-        LANGCHAIN_API_KEY = credentials('langchain-api-key')
-        LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com"
-        LANGCHAIN_PROJECT = "Youtube-summarizer"
-        LANGCHAIN_TRACING_V2 = "true"
-        
-        YOUTUBE_API_KEY = credentials('youtube-api-key')pipeline {
+pipeline {
     agent {
         label 'jenkins-jenkins-agent'
     }
@@ -121,11 +90,20 @@
 
         stage('Update Helm Values') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: "${GIT_CREDENTIALS_ID}",
-                    usernameVariable: 'GIT_USERNAME',
-                    passwordVariable: 'GIT_PASSWORD'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${GIT_CREDENTIALS_ID}",
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    ),
+                    string(credentialsId: 'db-password', variable: 'DB_PASSWORD'),
+                    string(credentialsId: 'cognito-client-secret', variable: 'COGNITO_CLIENT_SECRET'),
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                    string(credentialsId: 'vidcap-api-key', variable: 'VIDCAP_API_KEY'),
+                    string(credentialsId: 'langchain-api-key', variable: 'LANGCHAIN_API_KEY'),
+                    string(credentialsId: 'youtube-api-key', variable: 'YOUTUBE_API_KEY')
+                ]) {
                     sh """
                     git checkout main
                     git config user.name "Jenkins CI"
@@ -136,7 +114,7 @@
                     # 이미지 태그 업데이트
                     sed -i 's|image: .*|image: ${ECR_REPO}:${IMAGE_TAG}|' manifests/deployment.yaml
                     
-                    # 환경 변수 섹션 추가/업데이트
+                    # 환경 변수 섹션 생성
                     cat > temp_env_section.yaml << 'EOF'
           env:
             - name: DB_HOST
