@@ -33,7 +33,7 @@ async def startup_event():
 # CORS 설정 (필요에 따라 origins 수정)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://www.tissue.cloud"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
