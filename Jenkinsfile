@@ -189,34 +189,17 @@
               value: "${YOUTUBE_API_KEY}"
 EOF
                     
-                    # Python으로 env 섹션 추가/교체
-                    python3 -c "
-import re
-import sys
-
-# deployment.yaml 읽기
-with open('manifests/deployment.yaml', 'r') as f:
-    content = f.read()
-
-# 새 env 섹션 읽기
-with open('temp_env_section.yaml', 'r') as f:
-    new_env_section = f.read()
-
-# env 섹션이 이미 있는지 확인하고 교체하거나 추가
-if 'env:' in content:
-    # 기존 env 섹션 교체
-    pattern = r'(\s+)env:\s*\n(\s*-\s*name:.*?\n\s*value:.*?\n)*'
-    content = re.sub(pattern, new_env_section, content, flags=re.MULTILINE | re.DOTALL)
-else:
-    # env 섹션이 없으면 image 다음에 추가
-    pattern = r'(image: .*?\n)'
-    replacement = r'\1' + new_env_section
-    content = re.sub(pattern, replacement, content)
-
-# 파일 저장
-with open('manifests/deployment.yaml', 'w') as f:
-    f.write(content)
-"
+                    # 간단한 방법으로 env 섹션 추가
+                    if grep -q "env:" manifests/deployment.yaml; then
+                        echo "Environment variables already exist, updating..."
+                        # env: 라인부터 다음 섹션까지 삭제하고 새로 추가
+                        sed -i '/env:/,/^[[:space:]]*[^[:space:]-]/d' manifests/deployment.yaml
+                        sed -i '/image: /r temp_env_section.yaml' manifests/deployment.yaml
+                    else
+                        echo "Adding environment variables..."
+                        # image 라인 다음에 env 섹션 추가
+                        sed -i '/image: /r temp_env_section.yaml' manifests/deployment.yaml
+                    fi
                     
                     # 임시 파일 삭제
                     rm temp_env_section.yaml
